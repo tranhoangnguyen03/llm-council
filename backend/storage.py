@@ -5,7 +5,7 @@ import os
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 from pathlib import Path
-from .config import DATA_DIR
+from .config import DATA_DIR, COUNCIL_MODELS, CHAIRMAN_MODEL
 
 
 def ensure_data_dir():
@@ -34,7 +34,9 @@ def create_conversation(conversation_id: str) -> Dict[str, Any]:
         "id": conversation_id,
         "created_at": datetime.utcnow().isoformat(),
         "title": "New Conversation",
-        "messages": []
+        "messages": [],
+        "council_models": COUNCIL_MODELS,
+        "chairman_model": CHAIRMAN_MODEL,
     }
 
     # Save to file
@@ -61,7 +63,12 @@ def get_conversation(conversation_id: str) -> Optional[Dict[str, Any]]:
         return None
 
     with open(path, 'r') as f:
-        return json.load(f)
+        data = json.load(f)
+        if "council_models" not in data:
+            data["council_models"] = COUNCIL_MODELS
+        if "chairman_model" not in data:
+            data["chairman_model"] = CHAIRMAN_MODEL
+        return data
 
 
 def save_conversation(conversation: Dict[str, Any]):
@@ -156,6 +163,60 @@ def add_assistant_message(
     save_conversation(conversation)
 
 
+def get_message(conversation_id: str, message_index: int) -> Optional[Dict[str, Any]]:
+    """
+    Get a specific message by index within a conversation.
+
+    Args:
+        conversation_id: Conversation identifier
+        message_index: Zero-based index of the message in the messages list
+
+    Returns:
+        The message dict if found, otherwise None
+    """
+    conversation = get_conversation(conversation_id)
+    if conversation is None:
+        return None
+
+    messages = conversation.get("messages", [])
+    if message_index < 0 or message_index >= len(messages):
+        return None
+    return messages[message_index]
+
+
+def update_message(conversation_id: str, message_index: int, updates: Dict[str, Any]) -> bool:
+    """
+    Update an existing message in a conversation.
+
+    Performs a shallow update of the message dict with the provided keys.
+
+    Args:
+        conversation_id: Conversation identifier
+        message_index: Zero-based index of the message to update
+        updates: Dict of fields to update/merge into the message
+
+    Returns:
+        True if updated successfully, False if not found
+    """
+    conversation = get_conversation(conversation_id)
+    if conversation is None:
+        return False
+
+    messages = conversation.get("messages", [])
+    if message_index < 0 or message_index >= len(messages):
+        return False
+
+    # Merge updates into the message
+    current = messages[message_index]
+    if not isinstance(current, dict):
+        return False
+
+    current.update(updates)
+
+    save_conversation(conversation)
+    return True
+
+
 def update_conversation_title(conversation_id: str, title: str):
     """
     Update the title of a conversation.
@@ -169,4 +230,33 @@ def update_conversation_title(conversation_id: str, title: str):
         raise ValueError(f"Conversation {conversation_id} not found")
 
     conversation["title"] = title
+    save_conversation(conversation)
+
+
+def delete_conversation(conversation_id: str) -> bool:
+    """
+    Delete a conversation file.
+
+    Args:
+        conversation_id: Conversation identifier
+
+    Returns:
+        True if deleted, False if not found
+    """
+    ensure_data_dir()
+    path = get_conversation_path(conversation_id)
+    if not os.path.exists(path):
+        return False
+    os.remove(path)
+    return True
+
+
+def update_conversation_config(conversation_id: str, updates: Dict[str, Any]):
+    conversation = get_conversation(conversation_id)
+    if conversation is None:
+        raise ValueError(f"Conversation {conversation_id} not found")
+    if "council_models" in updates and isinstance(updates["council_models"], list):
+        conversation["council_models"] = updates["council_models"]
+    if "chairman_model" in updates and isinstance(updates["chairman_model"], str):
+        conversation["chairman_model"] = updates["chairman_model"]
     save_conversation(conversation)

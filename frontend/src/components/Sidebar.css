@@ -1,7 +1,7 @@
 .sidebar {
-  width: 260px;
-  background: #f8f8f8;
-  border-right: 1px solid #e0e0e0;
+  width: 280px;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -13,27 +13,26 @@
 }
 
 .sidebar-header h1 {
-  font-size: 18px;
-  margin: 0 0 12px 0;
-  color: #333;
+  font-size: var(--font-size-lg);
+  margin: 0 0 var(--space-3) 0;
+  color: var(--color-text);
 }
 
 .new-conversation-btn {
   width: 100%;
-  padding: 10px;
-  background: #4a90e2;
-  border: 1px solid #4a90e2;
-  border-radius: 6px;
-  color: #fff;
+  padding: var(--space-3);
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  color: var(--color-primary-contrast);
   cursor: pointer;
-  font-size: 14px;
-  transition: background 0.2s;
-  font-weight: 500;
+  font-size: var(--font-size-sm);
+  transition: background var(--transition-medium) var(--easing-standard);
+  font-weight: 600;
 }
 
 .new-conversation-btn:hover {
-  background: #357abd;
-  border-color: #357abd;
+  filter: brightness(0.95);
 }
 
 .conversation-list {
@@ -50,29 +49,83 @@
 }
 
 .conversation-item {
-  padding: 12px;
-  margin-bottom: 4px;
-  border-radius: 6px;
+  padding: var(--space-3);
+  margin-bottom: var(--space-1);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background var(--transition-fast) var(--easing-standard);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.conversation-item.removing {
+  opacity: 0;
+  transform: translateX(-6px);
 }
 
 .conversation-item:hover {
-  background: #f0f0f0;
+  background: var(--color-bg);
 }
 
 .conversation-item.active {
-  background: #e8f0fe;
-  border: 1px solid #4a90e2;
+  background: color-mix(in oklab, var(--color-primary) 12%, var(--color-bg));
+  border: 1px solid var(--color-primary);
 }
 
 .conversation-title {
-  color: #333;
-  font-size: 14px;
-  margin-bottom: 4px;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-1);
+  font-weight: 600;
 }
 
 .conversation-meta {
-  color: #999;
-  font-size: 12px;
+  color: var(--color-text-subtle);
+  font-size: var(--font-size-xs);
 }
+
+.item-actions {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+
+.icon-button {
+  /* Use global button styles from tokens.css; keep compact spacing in sidebar */
+  padding: 6px 10px;
+}
+
+.icon-button.danger {
+  color: var(--color-danger);
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  display: grid;
+  place-items: center;
+}
+
+.dialog {
+  background: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-md);
+  width: min(480px, 90vw);
+}
+
+.dialog-actions { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
+.btn { padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); background: var(--color-bg); }
+.btn.primary { background: var(--color-primary); color: var(--color-primary-contrast); border-color: var(--color-primary); }
+.btn.danger { border-color: var(--color-danger); color: var(--color-primary-contrast); background: var(--color-danger); }
+.input { width: 100%; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-text);} 
+.error { color: var(--color-danger); font-size: var(--font-size-sm); margin-top: var(--space-2); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+
+.toast { position: fixed; bottom: 16px; left: 16px; display: inline-flex; gap: var(--space-2); align-items: center; padding: 10px 12px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-sm); box-shadow: var(--shadow-sm); }
+.toast.success { border-color: var(--color-success); }
+.toast.error { border-color: var(--color-danger); }

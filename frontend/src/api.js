@@ -46,6 +46,49 @@ export const api = {
     return response.json();
   },
 
+  async updateConversationTitle(conversationId, title) {
+    const response = await fetch(`${API_BASE}/api/conversations/${conversationId}/title`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conversation_id: conversationId, title }),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to update title');
+    }
+    return response.json();
+  },
+
+  async deleteConversation(conversationId) {
+    const response = await fetch(`${API_BASE}/api/conversations/${conversationId}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      throw new Error('Failed to delete conversation');
+    }
+    return response.json();
+  },
+
+  async getModels() {
+    const response = await fetch(`${API_BASE}/api/models`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch models');
+    }
+    return response.json();
+  },
+
+  async updateConversationConfig(conversationId, payload) {
+    const response = await fetch(`${API_BASE}/api/conversations/${conversationId}/config`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(text || 'Failed to update config');
+    }
+    return response.json();
+  },
+
   /**
    * Send a message in a conversation.
    */
@@ -73,7 +116,7 @@ export const api = {
    * @param {function} onEvent - Callback function for each event: (eventType, data) => void
    * @returns {Promise<void>}
    */
-  async sendMessageStream(conversationId, content, onEvent) {
+  async sendMessageStream(conversationId, content, onEvent, mode = 'auto') {
     const response = await fetch(
       `${API_BASE}/api/conversations/${conversationId}/message/stream`,
       {
@@ -81,7 +124,7 @@ export const api = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, mode }),
       }
     );
 
@@ -111,5 +154,64 @@ export const api = {
         }
       }
     }
+  },
+
+  async continueStage(conversationId, messageIndex) {
+    const response = await fetch(
+      `${API_BASE}/api/conversations/${conversationId}/messages/${messageIndex}/continue`,
+      { method: 'POST' }
+    );
+    if (!response.ok) {
+      throw new Error('Failed to continue to next stage');
+    }
+    return response.json();
+  },
+
+  async rerunFull(conversationId, messageIndex, content) {
+    const response = await fetch(
+      `${API_BASE}/api/conversations/${conversationId}/messages/${messageIndex}/rerun`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: content ?? null }),
+      }
+    );
+    if (!response.ok) {
+      throw new Error('Failed to rerun full stages');
+    }
+    return response.json();
+  },
+
+  async rerunStage1Model(conversationId, messageIndex, modelName) {
+    const response = await fetch(
+      `${API_BASE}/api/conversations/${conversationId}/messages/${messageIndex}/stage1/model/${encodeURIComponent(modelName)}`,
+      { method: 'POST' }
+    );
+    if (!response.ok) {
+      throw new Error('Failed to rerun Stage 1 model');
+    }
+    return response.json();
+  },
+
+  async rerunStage2Model(conversationId, messageIndex, modelName) {
+    const response = await fetch(
+      `${API_BASE}/api/conversations/${conversationId}/messages/${messageIndex}/stage2/model/${encodeURIComponent(modelName)}`,
+      { method: 'POST' }
+    );
+    if (!response.ok) {
+      throw new Error('Failed to rerun Stage 2 model');
+    }
+    return response.json();
+  },
+
+  async rerunStage3(conversationId, messageIndex) {
+    const response = await fetch(
+      `${API_BASE}/api/conversations/${conversationId}/messages/${messageIndex}/stage3`,
+      { method: 'POST' }
+    );
+    if (!response.ok) {
+      throw new Error('Failed to rerun Stage 3');
+    }
+    return response.json();
   },
 };

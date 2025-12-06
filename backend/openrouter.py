@@ -1,8 +1,12 @@
 """OpenRouter API client for making LLM requests."""
 
+import time
 import httpx
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from .config import OPENROUTER_API_KEY, OPENROUTER_API_URL
+
+_MODEL_CACHE: Dict[str, Any] = {"data": None, "ts": 0}
+_MODEL_CACHE_TTL = 24 * 60 * 60
 
 
 async def query_model(
@@ -77,3 +81,33 @@ async def query_models_parallel(
 
     # Map models to their responses
     return {model: response for model, response in zip(models, responses)}
+
+
+async def fetch_available_models(force: bool = False) -> Tuple[List[Dict[str, Any]], bool]:
+    now = int(time.time())
+    if not force and _MODEL_CACHE.get("data") and now - int(_MODEL_CACHE.get("ts", 0)) < _MODEL_CACHE_TTL:
+        return _MODEL_CACHE["data"], True
+    url = "https://openrouter.ai/api/v1/models"
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.get(url)
+            resp.raise_for_status()
+            data = resp.json()
+            items = data.get("data") or []
+            models = []
+            for it in items:
+                mid = it.get("id") or it.get("name") or ""
+                if not mid:
+                    continue
+                models.append({
+                    "id": mid,
+                    "context_length": it.get("context_length") or it.get("context_length_tokens") or None,
+                    "pricing": it.get("pricing") or {},
+                })
+            if models:
+                _MODEL_CACHE["data"] = models
+                _MODEL_CACHE["ts"] = now
+            return models, False
+    except Exception as e:
+        cached = _MODEL_CACHE.get("data") or []
+        return cached, True

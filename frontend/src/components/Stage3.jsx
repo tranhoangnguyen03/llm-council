@@ -1,7 +1,7 @@
 import ReactMarkdown from 'react-markdown';
 import './Stage3.css';
 
-export default function Stage3({ finalResponse }) {
+export default function Stage3({ finalResponse, onRerun, disabled = false, loading = false }) {
   if (!finalResponse) {
     return null;
   }
@@ -16,6 +16,24 @@ export default function Stage3({ finalResponse }) {
         <div className="final-text markdown-content">
           <ReactMarkdown>{finalResponse.response}</ReactMarkdown>
         </div>
+        {onRerun && (
+          <div className="actions" style={{ marginTop: 8 }}>
+            <button
+              className="icon-button"
+              onClick={onRerun}
+              disabled={disabled}
+              aria-label="Rerun verdict"
+              aria-busy={loading}
+            >
+              {loading ? 'Regenerating…' : 'Rerun Verdict'}
+            </button>
+            {loading && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginLeft: 8 }} aria-live="polite">
+                <span className="spinner" style={{ width: 16, height: 16 }} />
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
